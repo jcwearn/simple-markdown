@@ -38,7 +38,7 @@ func (p SimpleParser) ParseInput(input string) string {
 		}
 
 		var (
-			text        = p.getTextWithLink(line)
+			text        = p.aRegex.ReplaceAllString(line, "<a href=\"$2\">$1</a>")
 			headerLevel int
 		)
 
@@ -65,8 +65,4 @@ func (p SimpleParser) ParseInput(input string) string {
 		output += formattedLine
 	}
 	return strings.TrimSpace(output)
-}
-
-func (p SimpleParser) getTextWithLink(s string) string {
-	return p.aRegex.ReplaceAllString(s, "<a href=\"$2\">$1</a>")
 }
