@@ -101,6 +101,26 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 			want:  "<h1>here is a header one <a href=\"example.com\">with a link</a></h1>",
 		},
 		{
+			name:  "empty link",
+			input: "[]()",
+			want:  "<p>[]()</p>",
+		},
+		{
+			name:  "partial link - no link",
+			input: "[has text]()",
+			want:  "<p>[has text]()</p>",
+		},
+		{
+			name:  "partial link - no text",
+			input: "[](example.com)",
+			want:  "<p>[](example.com)</p>",
+		},
+		{
+			name:  "malformed link",
+			input: "[some text)(example.com]",
+			want:  "<p>[some text)(example.com]</p>",
+		},
+		{
 			name:  "mailchimp input 1",
 			input: "# Sample Document\n\nHello!\n\nThis is sample markdown for the [Mailchimp](https://www.mailchimp.com) homework assignment.",
 			want:  "<h1>Sample Document</h1>\n\n<p>Hello!</p>\n\n<p>This is sample markdown for the <a href=\"https://www.mailchimp.com\">Mailchimp</a> homework assignment.</p>",
