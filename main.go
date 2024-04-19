@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jcwearn/simple-markdown/cmd/repl"
 	"github.com/jcwearn/simple-markdown/cmd/webserver"
 	"github.com/jcwearn/simple-markdown/internal/simpleparser"
 )
@@ -21,7 +22,7 @@ func main() {
 		ws := webserver.NewWebServer(parser)
 		ws.Start()
 	case "repl":
-		// repl command
+		repl.Start(parser)
 	default:
 		fmt.Println("Invalid command")
 		os.Exit(1)

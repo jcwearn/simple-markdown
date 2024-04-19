@@ -10,6 +10,11 @@ To run simpleparser as a webserver use the following command:
 go run main.go webserver
 ```
 
+To run simpleparser as an interactive repl use the following command:
+```bash
+go run main.go repl
+```
+
 ## Sample Request
 ```
 curl --location 'localhost:4000/v1/parse' \
