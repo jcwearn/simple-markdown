@@ -2,14 +2,12 @@ package simpleparser
 
 import (
 	"fmt"
-	"log/slog"
 	"regexp"
 	"strings"
 )
 
 type (
 	SimpleParser struct {
-		logger *slog.Logger
 		hRegex *regexp.Regexp
 		aRegex *regexp.Regexp
 	}
@@ -18,10 +16,10 @@ type (
 const headerRegex = `(?P<header>^#{1,6})(?P<text>\s(.*)$)`
 const linkRegex = `\[([^\]]+)\]\(([^)]+)\)`
 
-func NewParser() *SimpleParser {
+func NewParser() SimpleParser {
 	hRegex := regexp.MustCompile(headerRegex)
 	aRegex := regexp.MustCompile(linkRegex)
-	return &SimpleParser{
+	return SimpleParser{
 		hRegex: hRegex,
 		aRegex: aRegex,
 	}

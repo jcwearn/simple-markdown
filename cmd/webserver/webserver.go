@@ -12,11 +12,11 @@ import (
 )
 
 type Webserver struct {
-	simpleParser *simpleparser.SimpleParser
+	simpleParser simpleparser.SimpleParser
 	logger       *slog.Logger
 }
 
-func NewWebServer(parser *simpleparser.SimpleParser) *Webserver {
+func NewWebServer(parser simpleparser.SimpleParser) *Webserver {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	return &Webserver{
 		simpleParser: parser,
