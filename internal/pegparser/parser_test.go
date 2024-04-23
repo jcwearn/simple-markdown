@@ -104,17 +104,17 @@ func TestPegParser_ParseInput(t *testing.T) {
 		{
 			name:  "empty link",
 			input: "[]()",
-			want:  "<p>[]()</p>",
+			want:  "",
 		},
 		{
 			name:  "partial link - no link",
 			input: "[has text]()",
-			want:  "<p>[has text]()</p>",
+			want:  "<a href=\"\">has text</a>",
 		},
 		{
 			name:  "partial link - no text",
 			input: "[](example.com)",
-			want:  "<p>[](example.com)</p>",
+			want:  "",
 		},
 		{
 			name:  "malformed link",

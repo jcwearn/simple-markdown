@@ -7,8 +7,6 @@ type Markdown struct {
 
 func anyToString(value any) string {
 	switch v := value.(type) {
-    case string:
-        return v
     case []any:
         byteArr, err := interfaceSliceToByteSlice(v)
         if err != nil {
@@ -74,7 +72,7 @@ Heading <- heading:Pound Spacing text:Text {
     if level > 0 && level < 7 {
         return fmt.Sprintf("<h%d>%s</h%d>", level, text.(string), level), nil
     }
-    return "<p>" + text.(string) + "</p>", nil
+    return "<p>" + string(c.text) + "</p>", nil
 }
 
 Pound <- heading:("#")+ {
@@ -95,14 +93,21 @@ MultilineText <- text1:Text Newline text2:Text {
     return text1.(string) + "\n" + text2.(string), nil
 }
 
-Link <- "[" text:LinkText "]" "(" url:URL ")" {
-    return "<a href=\"" + anyToString(url) + "\">" + anyToString(text) + "</a>", nil
+Link <- "[" text:(LinkText / "") "]" "(" url:(URL / "") ")" {
+    textStr := anyToString(text)
+    urlStr := anyToString(url)
+
+    if textStr == "" {
+        return "", nil
+    } else if urlStr == "" {
+        return "<a href=\"\">" + textStr + "</a>", nil
+    }
+
+    return "<a href=\"" + urlStr + "\">" + textStr + "</a>", nil
 }
 
 Text <- text:(Link / NormalText)* {
     switch val := text.(type) {
-    case string: 
-        return val, nil
     case []any:
         var sArr []string
         for _, v := range val {
