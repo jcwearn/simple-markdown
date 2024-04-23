@@ -74,7 +74,7 @@ func TestPegParser_ParseInput(t *testing.T) {
 		{
 			name:  "extra #",
 			input: "####### extra #",
-			want:  "<h6># extra #</h6>",
+			want:  "<p>####### extra #</p>",
 		},
 		{
 			name:  "paragraph",

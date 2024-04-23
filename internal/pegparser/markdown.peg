@@ -68,30 +68,17 @@ Element <- element:(Link / Heading / Paragraph) {
 ElementBlankLine <- element:Element BlankLine {
     return element.(string), nil
 }
-Heading <- (HeadingSix / HeadingFive / HeadingFour / HeadingThree / HeadingTwo / HeadingOne )
 
-HeadingOne <- "#" Spacing text:Text {
-    return fmt.Sprintf("<h1>%s</h1>", text.(string)), nil
+Heading <- heading:Pound Spacing text:Text {
+    level := len(heading.(string))
+    if level > 0 && level < 7 {
+        return fmt.Sprintf("<h%d>%s</h%d>", level, text.(string), level), nil
+    }
+    return "<p>" + text.(string) + "</p>", nil
 }
 
-HeadingTwo <- "##" Spacing text:Text {
-    return fmt.Sprintf("<h2>%s</h2>", text.(string)), nil
-}
-
-HeadingThree <- "###" Spacing text:Text {
-    return fmt.Sprintf("<h3>%s</h3>", text.(string)), nil
-}
-
-HeadingFour <- "####" Spacing text:Text {
-    return fmt.Sprintf("<h4>%s</h4>", text.(string)), nil
-}
-
-HeadingFive <- "#####" Spacing text:Text {
-    return fmt.Sprintf("<h5>%s</h5>", text.(string)), nil
-}
-
-HeadingSix <- "######" Spacing text:Text {
-    return fmt.Sprintf("<h6>%s</h6>", text.(string)), nil
+Pound <- heading:("#")+ {
+    return string(c.text), nil
 }
 
 Paragraph <- text:(MultilineText / Text) {
