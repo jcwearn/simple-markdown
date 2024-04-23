@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jcwearn/simple-markdown/internal/simpleparser"
+	"github.com/jcwearn/simple-markdown/internal/parser"
 )
 
 const PROMPT = ">> "
 
-func Start(parser simpleparser.SimpleParser) {
+func Start(parser parser.Parser) {
 	in := os.Stdin
 	out := os.Stdout
 	scanner := bufio.NewScanner(in)
@@ -22,6 +22,11 @@ func Start(parser simpleparser.SimpleParser) {
 			return
 		}
 		line := scanner.Text()
-		fmt.Fprintf(out, fmt.Sprintln(parser.ParseInput(line)))
+		parsed, err := parser.ParseInput(line)
+		if err != nil {
+			fmt.Fprintf(out, fmt.Sprintln(err))
+		} else {
+			fmt.Fprintf(out, fmt.Sprintln(parsed))
+		}
 	}
 }

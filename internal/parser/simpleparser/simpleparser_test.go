@@ -135,7 +135,7 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			simpleParser := NewParser()
 
-			got := simpleParser.ParseInput(tt.input)
+			got, _ := simpleParser.ParseInput(tt.input)
 			if got != tt.want {
 				t.Errorf("SimpleParser.ParseInput() = %v, want %v", got, tt.want)
 			}

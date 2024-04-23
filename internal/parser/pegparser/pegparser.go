@@ -5,7 +5,22 @@ import (
 	"strings"
 )
 
-func ParseInput(input string) (string, error) {
+type (
+	PegParserConfig struct {
+		Debug bool
+	}
+	PegParser struct {
+		debug bool
+	}
+)
+
+func NewParser(cfg PegParserConfig) PegParser {
+	return PegParser{
+		debug: cfg.Debug,
+	}
+}
+
+func (pp PegParser) ParseInput(input string) (string, error) {
 	result, err := Parse("", []byte(input))
 	if err != nil {
 		return "", err

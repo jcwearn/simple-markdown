@@ -25,9 +25,9 @@ func NewParser() SimpleParser {
 	}
 }
 
-func (p SimpleParser) ParseInput(input string) string {
+func (p SimpleParser) ParseInput(input string) (string, error) {
 	if strings.TrimSpace(input) == "" {
-		return ""
+		return "", nil
 	}
 
 	var output string
@@ -64,5 +64,5 @@ func (p SimpleParser) ParseInput(input string) string {
 		}
 		output += formattedLine
 	}
-	return strings.TrimSpace(output)
+	return strings.TrimSpace(output), nil
 }
