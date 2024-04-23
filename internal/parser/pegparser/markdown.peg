@@ -59,7 +59,17 @@ ElementBlankLine <- element:Element BlankLine {
 Heading <- heading:Pound Spacing text:Text {
     level := len(heading.(string))
     if level > 0 && level < 7 {
-        return fmt.Sprintf("<h%d>%s</h%d>", level, text.(string), level), nil
+
+        textStr, ok := text.(string)
+        if !ok {
+            return "", errors.New("could not convert text into string")
+        }
+
+        if textStr == "" {
+            return "", nil
+        }
+
+        return fmt.Sprintf("<h%d>%s</h%d>", level, textStr, level), nil
     }
     return "<p>" + string(c.text) + "</p>", nil
 }

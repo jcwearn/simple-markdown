@@ -77,6 +77,16 @@ func TestPegParser_ParseInput(t *testing.T) {
 			want:  "<p>####### extra #</p>",
 		},
 		{
+			name:  "header with no text",
+			input: "######",
+			want:  "",
+		},
+		{
+			name:  "header with whitespace",
+			input: "######   ",
+			want:  "",
+		},
+		{
 			name:  "paragraph",
 			input: "here is a paragraph",
 			want:  "<p>here is a paragraph</p>",
