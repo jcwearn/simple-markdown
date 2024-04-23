@@ -8,7 +8,7 @@ import (
 func ParseInput(input string) (string, error) {
 	result, err := Parse("", []byte(input))
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if md, ok := result.(Markdown); ok {

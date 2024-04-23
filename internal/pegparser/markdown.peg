@@ -10,18 +10,14 @@ func anyToString(value any) string {
     case string:
         return v
     case []any:
-        log.Printf("Converting []any to string: %v", v)
         byteArr, err := interfaceSliceToByteSlice(v)
         if err != nil {
-            fmt.Printf("failed converting shit: %v", err)
             return fmt.Sprintf("%v", v)
         }
         return string(byteArr)
     case []uint8:
         return strings.TrimSpace(string(v))
 	default:
-        typeOfValue := reflect.TypeOf(value)
-		fmt.Printf("Unhandled type: %v value: %v", typeOfValue, v)
 		return fmt.Sprintf("%v", v)
 	}
 }
@@ -32,7 +28,6 @@ func interfaceSliceToByteSlice(data []any) ([]byte, error) {
 		if b, ok := v.([]uint8); ok {
 			result = append(result, b[0])
 		} else {
-			log.Printf("Type assertion failed: expected uint8, got %T", v)
 			return nil, fmt.Errorf("type assertion failed: expected byte, got %T", v)
 		}
 	}
@@ -45,16 +40,14 @@ func convertToStrings(data []interface{}) ([]string, error) {
         if str, ok := v.(string); ok {
             result = append(result, str)
         } else {
-            // Handle the error per your requirements
-            // You could log the error, return an error, or append a default string, etc.
-            fmt.Printf("Warning: Non-string value encountered: %v\n", v)
+            return []string{}, errors.New(fmt.Sprintf("Warning: Non-string value encountered: %v\n", v))
         }
     }
     return result, nil
 }
 }
 
-Markdown <- elements:(ElementNewLine)* element:Element? EOF {
+Markdown <- elements:(ElementBlankLine)* element:Element? EOF {
     var lines []string
     elems, _ := convertToStrings(elements.([]interface{}))
     lines = append(lines, elems...)
@@ -72,62 +65,62 @@ Element <- element:(Link / Heading / Paragraph) {
     return element.(string), nil
 }
 
-ElementNewLine <- element:Element "\n\n" {
+ElementBlankLine <- element:Element BlankLine {
     return element.(string), nil
 }
-
 Heading <- (HeadingSix / HeadingFive / HeadingFour / HeadingThree / HeadingTwo / HeadingOne )
 
-HeadingOne <- "#" _ text:Text {
+HeadingOne <- "#" Spacing text:Text {
     return fmt.Sprintf("<h1>%s</h1>", text.(string)), nil
 }
 
-HeadingTwo <- "##" _ text:Text {
+HeadingTwo <- "##" Spacing text:Text {
     return fmt.Sprintf("<h2>%s</h2>", text.(string)), nil
 }
 
-HeadingThree <- "###" _ text:Text {
+HeadingThree <- "###" Spacing text:Text {
     return fmt.Sprintf("<h3>%s</h3>", text.(string)), nil
 }
 
-HeadingFour <- "####" _ text:Text {
+HeadingFour <- "####" Spacing text:Text {
     return fmt.Sprintf("<h4>%s</h4>", text.(string)), nil
 }
 
-HeadingFive <- "#####" _ text:Text {
-    fmt.Printf("this is doing something %s", anyToString(text))
+HeadingFive <- "#####" Spacing text:Text {
     return fmt.Sprintf("<h5>%s</h5>", text.(string)), nil
 }
 
-HeadingSix <- "######" _ text:Text {
+HeadingSix <- "######" Spacing text:Text {
     return fmt.Sprintf("<h6>%s</h6>", text.(string)), nil
 }
 
-Paragraph <- text:Text {
-    if string(c.text) == "" {
+Paragraph <- text:(MultilineText / Text) {
+    if strings.TrimSpace(string(c.text)) == "" {
         return "", nil
     }
     return "<p>" + text.(string) + "</p>", nil
 }
 
+MultilineText <- text1:Text Newline text2:Text {
+    if text2.(string) == "" {
+       return text1.(string), nil
+    }
+    return text1.(string) + "\n" + text2.(string), nil
+}
+
 Link <- "[" text:LinkText "]" "(" url:URL ")" {
-    urlStr := anyToString(url)
-    textStr := anyToString(text) 
-    fmt.Printf("\n\nmatched a link %s\nurl:%s\ntext:%s\n\n", string(c.text), urlStr, textStr)
-    return "<a href=\"" + urlStr + "\">" + textStr + "</a>", nil
+    return "<a href=\"" + anyToString(url) + "\">" + anyToString(text) + "</a>", nil
 }
 
 Text <- text:(Link / NormalText)* {
     switch val := text.(type) {
     case string: 
-        fmt.Printf("\n\nmatched a text: %s\n\n", val)
         return val, nil
     case []any:
         var sArr []string
         for _, v := range val {
 			sArr = append(sArr, v.(string))
 		}
-        fmt.Printf("\n\nmatched a []text: %s\n\n", strings.Join(sArr, " "))
         return strings.Join(sArr, ""), nil
     default: 
         return "", errors.New(fmt.Sprintf("could not handle %v properly", text))
@@ -140,5 +133,7 @@ NormalText <- (!"[" !"]" !"\n" .)+ {
 
 URL <- [^) \t\n]+
 LinkText <- [^\]]+
-_ "whitespace" <- [ \t]*
+BlankLine <- Newline+
+Newline <- "\n"
+Spacing <- [ \t]*
 EOF <- !.
