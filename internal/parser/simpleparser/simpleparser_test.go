@@ -76,6 +76,16 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 			want:  "<p>####### extra #</p>",
 		},
 		{
+			name:  "header with no text",
+			input: "######",
+			want:  "",
+		},
+		{
+			name:  "header with whitespace",
+			input: "######   ",
+			want:  "",
+		},
+		{
 			name:  "paragraph",
 			input: "here is a paragraph",
 			want:  "<p>here is a paragraph</p>",
@@ -103,17 +113,17 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 		{
 			name:  "empty link",
 			input: "[]()",
-			want:  "<p>[]()</p>",
+			want:  "",
 		},
 		{
 			name:  "partial link - no link",
 			input: "[has text]()",
-			want:  "<p>[has text]()</p>",
+			want:  "<p><a href=\"\">has text</a></p>",
 		},
 		{
 			name:  "partial link - no text",
 			input: "[](example.com)",
-			want:  "<p>[](example.com)</p>",
+			want:  "",
 		},
 		{
 			name:  "malformed link",
