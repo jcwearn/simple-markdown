@@ -80,7 +80,7 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 
 		var formattedLine string
 		if text != "" {
-			text = strings.TrimSpace(text)
+			text = strings.Join(strings.Fields(text), " ")
 			if headerLevel > 0 {
 				formattedLine = fmt.Sprintf("<h%d>%s</h%d>\n\n", headerLevel, text, headerLevel)
 			} else {
