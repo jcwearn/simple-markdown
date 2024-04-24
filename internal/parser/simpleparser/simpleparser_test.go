@@ -71,18 +71,23 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 			want:  "<h6>Header six</h6>",
 		},
 		{
-			name:  "extra #",
+			name:  "header extra #",
 			input: "####### extra #",
 			want:  "<p>####### extra #</p>",
 		},
 		{
-			name:  "header with no text",
-			input: "######",
+			name:  "header leading whitespace",
+			input: "    ###### leading whitespace",
+			want:  "<h6>leading whitespace</h6>",
+		},
+		{
+			name:  "header trailing whitespace",
+			input: "######   ",
 			want:  "",
 		},
 		{
-			name:  "header with whitespace",
-			input: "######   ",
+			name:  "header with no text",
+			input: "######",
 			want:  "",
 		},
 		{
@@ -104,6 +109,11 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 			name:  "paragraph - multiline - with an empty line",
 			input: "here is a paragraph\n\nwith two lines",
 			want:  "<p>here is a paragraph</p>\n\n<p>with two lines</p>",
+		},
+		{
+			name:  "paragraph - leading whitespace",
+			input: "    paragraph with leading whitespace",
+			want:  "<p>paragraph with leading whitespace</p>",
 		},
 		{
 			name:  "h1 - with link",

@@ -39,7 +39,7 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 			headerLevel int
 			bracketText string
 			urlText     string
-			text        = line
+			text        = strings.TrimSpace(line)
 		)
 
 		linkSubmatch := p.linkRegex.FindStringSubmatch(line)
@@ -84,10 +84,21 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 			if headerLevel > 0 {
 				formattedLine = fmt.Sprintf("<h%d>%s</h%d>\n\n", headerLevel, text, headerLevel)
 			} else {
-				formattedLine = fmt.Sprintf("<p>%s</p>\n\n", text)
+				if !isPoundString(text) {
+					formattedLine = fmt.Sprintf("<p>%s</p>\n\n", text)
+				}
 			}
 		}
 		output += formattedLine
 	}
 	return strings.TrimSpace(output), nil
+}
+
+func isPoundString(s string) bool {
+	for i := 1; i < len(s); i++ {
+		if s[i] != '#' {
+			return false
+		}
+	}
+	return true
 }
