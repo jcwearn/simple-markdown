@@ -1,0 +1,170 @@
+{
+package pegparser
+
+type Markdown struct {
+    Lines []string
+}
+
+func convertToStrings(data []interface{}) ([]string, error) {
+    var result []string
+    for _, v := range data {
+        if str, ok := v.(string); ok {
+            result = append(result, str)
+        } else {
+            return []string{}, errors.New(fmt.Sprintf("Warning: Non-string value encountered: %v\n", v))
+        }
+    }
+    return result, nil
+}
+
+func convertToString(data []interface{}) (string, error) {
+    sArr, err := convertToStrings(data)
+    if err != nil {
+        return "", err
+    }
+    return strings.Join(sArr, ""), nil
+}
+}
+// {
+
+Markdown <- elements:(ElementBlankLine)* element:Element? EOF {
+    elementsArr, ok := elements.([]any)
+    if !ok {
+        return "", errors.New("could not convert elements into []any")
+    }
+    elems, err := convertToStrings(elementsArr)
+    if err != nil {
+        return Markdown{}, err
+    }
+
+    var lines []string
+    lines = append(lines, elems...)
+
+    if element != nil {
+        lines = append(lines, element.(string))
+    }
+
+    return Markdown{
+        Lines: lines,
+    }, nil
+}
+
+Element <- Spacing element:(Heading / Paragraph) {
+    return strings.Join(strings.Fields(element.(string)), " "), nil
+}
+
+ElementBlankLine <- Spacing element:Element BlankLine {
+    return element.(string), nil
+}
+
+Heading <- heading:Pound Spacing text:Text {
+    level := len(heading.(string))
+    if level > 0 && level < 7 {
+
+        textStr, ok := text.(string)
+        if !ok {
+            return "", errors.New("could not convert text into string")
+        }
+
+        if textStr == "" {
+            return "", nil
+        }
+
+        return fmt.Sprintf("<h%d>%s</h%d>", level, textStr, level), nil
+    }
+    return "<p>" + string(c.text) + "</p>", nil
+}
+
+Pound <- heading:("#")+ {
+    return string(c.text), nil
+}
+
+Paragraph <- text:(MultilineText / Text) {
+    if strings.TrimSpace(text.(string)) == "" {
+        return "", nil
+    }
+    return "<p>" + text.(string) + "</p>", nil
+}
+
+MultilineText <- text1:Text Newline text2:Text {
+    if text2.(string) == "" {
+       return text1.(string), nil
+    }
+    return text1.(string) + "\n" + text2.(string), nil
+}
+
+Link <- "[" Spacing text:(LinkText / "") Spacing "]" "(" Spacing url:(URL / "") Spacing ")" {
+    textStr := fmt.Sprintf("%v", text)
+    urlStr := fmt.Sprintf("%v", url)
+
+    fmt.Printf("textStr: %send\n", textStr)
+
+    if textStr == "[]" {
+        return "", nil
+    } else if urlStr == "[]" {
+        return "<a href=\"\">" + textStr + "</a>", nil
+    }
+
+    return "<a href=\"" + urlStr + "\">" + strings.TrimSpace(textStr) + "</a>", nil
+}
+
+BracketText <- spacing1:Spacing text:(Link / AnyText) spacing2:Spacing {
+    var space1, space2 string
+    if spacing1.(string) != "" {
+        space1 = " "
+    }
+    if spacing2.(string) != "" {
+        space2 = " "
+    }
+    fmt.Printf("matched a BracketText text.(string): %s\n", text.(string))
+    fmt.Printf("matched a BracketText c.text: %s\n\n", string(c.text))
+
+    return space1 + text.(string) + space2, nil
+}
+
+AnyText <- (!"\n" .)+ {
+     return string(c.text), nil
+}
+
+Text <- text1:NormalText* bracketText:BracketText* text2:NormalText* {
+    var textArr []any
+    text1Arr, ok := text1.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert text1 into []any")
+    }
+    textArr = append(textArr, text1Arr...)
+
+    bracketTextArr, ok := bracketText.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert bracketText into []any")
+    }
+    textArr = append(textArr, bracketTextArr...)
+
+    text2Arr, ok := text2.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert text2 into []any")
+    }
+    textArr = append(textArr, text2Arr...)
+    
+    return convertToString(textArr)
+}
+
+NormalText <- (!"[" !"]" !"\n" .)+ {
+    return string(c.text), nil
+}
+
+URL <- [^) \t\n]+  {
+    return string(c.text), nil
+}
+
+LinkText <- [^\]\n]+  {
+    return string(c.text), nil
+}
+
+Spacing <- [ \t]* {
+    return string(c.text), nil
+}
+
+BlankLine <- Newline+
+Newline <- "\n"
+EOF <- !.

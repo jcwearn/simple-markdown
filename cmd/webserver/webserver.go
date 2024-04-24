@@ -1,37 +1,46 @@
 package webserver
 
 import (
-	"flag"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/jcwearn/simple-markdown/internal/simpleparser"
+	"github.com/jcwearn/simple-markdown/internal/parser/pegparser"
+	"github.com/jcwearn/simple-markdown/internal/parser/simpleparser"
 )
 
-type Webserver struct {
-	simpleParser simpleparser.SimpleParser
-	logger       *slog.Logger
-}
+type (
+	WebServerConfig struct {
+		Address      string
+		SimpleParser simpleparser.SimpleParser
+		PegParser    pegparser.PegParser
+	}
+	WebServer struct {
+		address      string
+		simpleParser simpleparser.SimpleParser
+		pegParser    pegparser.PegParser
+		logger       *slog.Logger
+	}
+)
 
-func NewWebServer(parser simpleparser.SimpleParser) *Webserver {
+func NewWebServer(cfg WebServerConfig) *WebServer {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	return &Webserver{
-		simpleParser: parser,
+	return &WebServer{
+		address:      cfg.Address,
+		simpleParser: cfg.SimpleParser,
+		pegParser:    cfg.PegParser,
 		logger:       logger,
 	}
 }
 
-func (ws *Webserver) Start() error {
-	addr := flag.String("addr", ":4000", "HTTP network address")
-
+func (ws *WebServer) Start() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/parse", ws.parseHandler)
 
 	srv := &http.Server{
-		Addr:         *addr,
+		Addr:         ws.address,
 		Handler:      mux,
 		ErrorLog:     slog.NewLogLogger(ws.logger.Handler(), slog.LevelError),
 		IdleTimeout:  time.Minute,
@@ -47,8 +56,11 @@ func (ws *Webserver) Start() error {
 	return err
 }
 
-func (ws *Webserver) parseHandler(w http.ResponseWriter, r *http.Request) {
+func (ws *WebServer) parseHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+
+	queryParams := r.URL.Query()
+	parserQueryParam := queryParams.Get("parser")
 
 	buf, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -56,7 +68,17 @@ func (ws *Webserver) parseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output := ws.simpleParser.ParseInput(string(buf))
+	var output string
+	if parserQueryParam == "peg" {
+		output, err = ws.pegParser.ParseInput(string(buf))
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		output, _ = ws.simpleParser.ParseInput(string(buf))
+	}
+
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "text/html")
 	w.Write([]byte(output))
