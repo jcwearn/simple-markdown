@@ -25,6 +25,7 @@ func convertToString(data []interface{}) (string, error) {
     return strings.Join(sArr, ""), nil
 }
 }
+// {
 
 Markdown <- elements:(ElementBlankLine)* element:Element? EOF {
     elementsArr, ok := elements.([]any)
@@ -48,11 +49,11 @@ Markdown <- elements:(ElementBlankLine)* element:Element? EOF {
     }, nil
 }
 
-Element <- element:(Link / Heading / Paragraph) {
-    return element.(string), nil
+Element <- Spacing element:(Heading / Paragraph) {
+    return strings.Join(strings.Fields(element.(string)), " "), nil
 }
 
-ElementBlankLine <- element:Element BlankLine {
+ElementBlankLine <- Spacing element:Element BlankLine {
     return element.(string), nil
 }
 
@@ -79,7 +80,7 @@ Pound <- heading:("#")+ {
 }
 
 Paragraph <- text:(MultilineText / Text) {
-    if strings.TrimSpace(string(c.text)) == "" {
+    if strings.TrimSpace(text.(string)) == "" {
         return "", nil
     }
     return "<p>" + text.(string) + "</p>", nil
@@ -92,9 +93,11 @@ MultilineText <- text1:Text Newline text2:Text {
     return text1.(string) + "\n" + text2.(string), nil
 }
 
-Link <- "[" text:(LinkText / "") "]" "(" url:(URL / "") ")" {
+Link <- "[" Spacing text:(LinkText / "") Spacing "]" "(" Spacing url:(URL / "") Spacing ")" {
     textStr := fmt.Sprintf("%v", text)
     urlStr := fmt.Sprintf("%v", url)
+
+    fmt.Printf("textStr: %send\n", textStr)
 
     if textStr == "[]" {
         return "", nil
@@ -102,14 +105,47 @@ Link <- "[" text:(LinkText / "") "]" "(" url:(URL / "") ")" {
         return "<a href=\"\">" + textStr + "</a>", nil
     }
 
-    return "<a href=\"" + urlStr + "\">" + textStr + "</a>", nil
+    return "<a href=\"" + urlStr + "\">" + strings.TrimSpace(textStr) + "</a>", nil
 }
 
-Text <- text:(Link / NormalText)* {
-    textArr, ok := text.([]any)
-    if !ok {
-        return "", errors.New("could not convert text into []any")
+BracketText <- spacing1:Spacing text:(Link / AnyText) spacing2:Spacing {
+    var space1, space2 string
+    if spacing1.(string) != "" {
+        space1 = " "
     }
+    if spacing2.(string) != "" {
+        space2 = " "
+    }
+    fmt.Printf("matched a BracketText text.(string): %s\n", text.(string))
+    fmt.Printf("matched a BracketText c.text: %s\n\n", string(c.text))
+
+    return space1 + text.(string) + space2, nil
+}
+
+AnyText <- (!"\n" .)+ {
+     return string(c.text), nil
+}
+
+Text <- text1:NormalText* bracketText:BracketText* text2:NormalText* {
+    var textArr []any
+    text1Arr, ok := text1.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert text1 into []any")
+    }
+    textArr = append(textArr, text1Arr...)
+
+    bracketTextArr, ok := bracketText.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert bracketText into []any")
+    }
+    textArr = append(textArr, bracketTextArr...)
+
+    text2Arr, ok := text2.([]any)
+    if !ok {
+        return "", errors.New("text: could not convert text2 into []any")
+    }
+    textArr = append(textArr, text2Arr...)
+    
     return convertToString(textArr)
 }
 
@@ -121,11 +157,14 @@ URL <- [^) \t\n]+  {
     return string(c.text), nil
 }
 
-LinkText <- [^\]]+  {
+LinkText <- [^\]\n]+  {
+    return string(c.text), nil
+}
+
+Spacing <- [ \t]* {
     return string(c.text), nil
 }
 
 BlankLine <- Newline+
 Newline <- "\n"
-Spacing <- [ \t]*
 EOF <- !.

@@ -21,7 +21,8 @@ func NewParser(cfg PegParserConfig) PegParser {
 }
 
 func (pp PegParser) ParseInput(input string) (string, error) {
-	result, err := Parse("", []byte(input))
+	debugOption := Debug(pp.debug)
+	result, err := Parse("", []byte(input), debugOption)
 	if err != nil {
 		return "", err
 	}
