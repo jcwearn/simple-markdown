@@ -42,27 +42,38 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 			text        = strings.TrimSpace(line)
 		)
 
-		linkSubmatch := p.linkRegex.FindStringSubmatch(line)
+		linkAllSubmatch := p.linkRegex.FindAllStringSubmatch(line, -1)
 		linkSubexpNames := p.linkRegex.SubexpNames()
-		if len(linkSubmatch) > 0 {
-			for i, name := range linkSubexpNames {
-				switch name {
-				case "bracket":
-					bracketText = strings.TrimSpace(linkSubmatch[i])
-				case "paren":
-					urlText = strings.TrimSpace(linkSubmatch[i])
+
+		for _, linkSubmatch := range linkAllSubmatch {
+			if len(linkSubmatch) > 0 {
+				for i, name := range linkSubexpNames {
+					switch name {
+					case "bracket":
+						bracketText = linkSubmatch[i]
+
+						if bracketText == "" {
+							text = strings.Replace(text, linkSubmatch[0], "", 1)
+						}
+					case "paren":
+						urlText = linkSubmatch[i]
+						if urlText == "" {
+							text = strings.Replace(text, linkSubmatch[0], fmt.Sprintf("<a href=\"\">%s</a>", bracketText), 1)
+						} else {
+							var replacement string
+							urlRemovedSpaces := removeExtraSpaces(urlText)
+							urlTrimmed := strings.TrimSpace(urlText)
+							if urlRemovedSpaces != urlTrimmed {
+								replacement = fmt.Sprintf("[%s](%s)", bracketText, urlText)
+							} else {
+								bracketTextTrimmed := strings.TrimSpace(bracketText)
+								replacement = fmt.Sprintf("<a href=\"%s\">%s</a>", urlTrimmed, bracketTextTrimmed)
+							}
+							text = strings.Replace(text, linkSubmatch[0], replacement, 1)
+						}
+					}
 				}
 			}
-
-			if bracketText == "" {
-				text = p.linkRegex.ReplaceAllString(text, "")
-			}
-
-			if urlText == "" {
-				text = p.linkRegex.ReplaceAllString(text, "<a href=\"\">$1</a>")
-			}
-
-			text = p.linkRegex.ReplaceAllString(text, "<a href=\"$2\">$1</a>")
 		}
 
 		headingSubmatch := p.headerRegex.FindStringSubmatch(text)
@@ -80,7 +91,7 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 
 		var formattedLine string
 		if text != "" {
-			text = strings.Join(strings.Fields(text), " ")
+			text = removeExtraSpaces(text)
 			if headerLevel > 0 {
 				formattedLine = fmt.Sprintf("<h%d>%s</h%d>\n\n", headerLevel, text, headerLevel)
 			} else {
@@ -92,6 +103,10 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 		output += formattedLine
 	}
 	return strings.TrimSpace(output), nil
+}
+
+func removeExtraSpaces(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func isPoundString(s string) bool {

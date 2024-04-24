@@ -179,6 +179,16 @@ var SharedTestCases = []TestCase{
 		Want:  "<p><a href=\"example.com\">some link</a><a href=\"example.com\">some other link</a></p>",
 	},
 	{
+		Name:  "multiple links - one invalid - 1",
+		Input: "[](example.com)[some other link](example.com)",
+		Want:  "<p><a href=\"example.com\">some other link</a></p>",
+	},
+	{
+		Name:  "multiple links - one invalid - 2",
+		Input: "[some link](example.com)[](example.com)",
+		Want:  "<p><a href=\"example.com\">some link</a></p>",
+	},
+	{
 		Name:  "mailchimp input 1",
 		Input: "# Sample Document\n\nHello!\n\nThis is sample markdown for the [Mailchimp](https://www.mailchimp.com) homework assignment.",
 		Want:  "<h1>Sample Document</h1>\n\n<p>Hello!</p>\n\n<p>This is sample markdown for the <a href=\"https://www.mailchimp.com\">Mailchimp</a> homework assignment.</p>",
@@ -187,5 +197,10 @@ var SharedTestCases = []TestCase{
 		Name:  "mailchimp input 2",
 		Input: "# Header one\n\nHello there\n\nHow are you?\nWhat's going on?\n\n## Another Header\n\nThis is a paragraph [with an inline link](http://google.com). Neat, eh?\n\n## This is a header [with a link](http://yahoo.com)",
 		Want:  "<h1>Header one</h1>\n\n<p>Hello there</p>\n\n<p>How are you? What's going on?</p>\n\n<h2>Another Header</h2>\n\n<p>This is a paragraph <a href=\"http://google.com\">with an inline link</a>. Neat, eh?</p>\n\n<h2>This is a header <a href=\"http://yahoo.com\">with a link</a></h2>",
+	},
+	{
+		Name:  "special characters",
+		Input: "<a href=\"\">%s</a>",
+		Want:  "<p><a href=\"\">%s</a></p>",
 	},
 }
