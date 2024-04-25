@@ -27,6 +27,11 @@ tidy:
 test:
 	go test -v -race -buildvcs ./...
 
+## test/bench: run all bench tests
+.PHONY: test/bench
+test/bench:
+	go test -bench=. ./...
+
 ## test/cover: run all tests and display coverage
 .PHONY: test/cover
 test/cover:
