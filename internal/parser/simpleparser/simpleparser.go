@@ -35,8 +35,7 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 			continue
 		}
 
-		text := strings.TrimSpace(line)
-		text = parseLinks(line, p.linkRegex)
+		text := parseLinks(line, p.linkRegex)
 		text, headerLevel := parseHeader(text, p.headerRegex)
 
 		var formattedLine string
