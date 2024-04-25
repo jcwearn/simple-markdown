@@ -20,3 +20,10 @@ func TestSimpleParser_ParseInput(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkSimpleParser_ParseInput(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		simpleParser := NewParser()
+		simpleParser.ParseInput(p.SharedTestCases[0].Input)
+	}
+}

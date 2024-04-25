@@ -22,3 +22,10 @@ func TestPegParser_ParseInput(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkPegParser_ParseInput(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		pegParser := NewParser(PegParserConfig{Debug: false})
+		pegParser.ParseInput(p.SharedTestCases[0].Input)
+	}
+}
