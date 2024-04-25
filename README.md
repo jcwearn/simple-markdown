@@ -2,8 +2,8 @@
 This is a very basic implemtation of a markdown parser.  It only supports a subset of markdown defined [here](https://gist.github.com/mc-interviews/305a6d7d8c4ba31d4e4323e574135bf9#formatting-specifics).  There are two implementations of the parser.  One is a naive approach using regex and parsing each individual line.  The other is a parser generated using a [Parsing Expression Grammar](https://en.wikipedia.org/wiki/Parsing_expression_grammar).
 
 # Dependencies
-Go [1.22](https://tip.golang.org/doc/go1.22) or greater
-[Pigeon](https://pkg.go.dev/github.com/mna/pigeon)
+- Go [1.22](https://tip.golang.org/doc/go1.22) or greater
+- [Pigeon](https://pkg.go.dev/github.com/mna/pigeon)
 
 ## Usage
 To run simpleparser as a webserver use the following command:
