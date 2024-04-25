@@ -16,7 +16,7 @@ func Start(parser parser.Parser) {
 	scanner := bufio.NewScanner(in)
 
 	for {
-		fmt.Fprintf(out, PROMPT)
+		fmt.Fprint(out, PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
 			return
@@ -24,9 +24,9 @@ func Start(parser parser.Parser) {
 		line := scanner.Text()
 		parsed, err := parser.ParseInput(line)
 		if err != nil {
-			fmt.Fprintf(out, fmt.Sprintln(err))
+			fmt.Fprint(out, fmt.Sprintln(err))
 		} else {
-			fmt.Fprintf(out, fmt.Sprintln(parsed))
+			fmt.Fprint(out, fmt.Sprintln(parsed))
 		}
 	}
 }

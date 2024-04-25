@@ -97,8 +97,6 @@ Link <- "[" Spacing text:(LinkText / "") Spacing "]" "(" Spacing url:(URL / "") 
     textStr := fmt.Sprintf("%v", text)
     urlStr := fmt.Sprintf("%v", url)
 
-    fmt.Printf("textStr: %send\n", textStr)
-
     if textStr == "[]" {
         return "", nil
     } else if urlStr == "[]" {
@@ -116,8 +114,6 @@ BracketText <- spacing1:Spacing text:(Link / AnyText) spacing2:Spacing {
     if spacing2.(string) != "" {
         space2 = " "
     }
-    fmt.Printf("matched a BracketText text.(string): %s\n", text.(string))
-    fmt.Printf("matched a BracketText c.text: %s\n\n", string(c.text))
 
     return space1 + text.(string) + space2, nil
 }
