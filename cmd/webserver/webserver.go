@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -59,11 +60,14 @@ func (ws *WebServer) Start() error {
 func (ws *WebServer) parseHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	ws.logger.Info("handling parse request")
+
 	queryParams := r.URL.Query()
 	parserQueryParam := queryParams.Get("parser")
 
 	buf, err := io.ReadAll(r.Body)
 	if err != nil {
+		ws.logger.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
@@ -72,6 +76,7 @@ func (ws *WebServer) parseHandler(w http.ResponseWriter, r *http.Request) {
 	if parserQueryParam == "peg" {
 		output, err = ws.pegParser.ParseInput(string(buf))
 		if err != nil {
+			ws.logger.Error(err.Error())
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -81,7 +86,8 @@ func (ws *WebServer) parseHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "text/html")
-	w.Write([]byte(output))
-
-	return
+	_, err = w.Write([]byte(output))
+	if err != nil {
+		ws.logger.Error(fmt.Sprintf("Write failed: %v", err))
+	}
 }

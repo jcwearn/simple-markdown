@@ -14,7 +14,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: simple <command>")
+		fmt.Println("Usage: simple <command> [args]")
 		os.Exit(1)
 	}
 
@@ -29,15 +29,25 @@ func main() {
 
 	switch os.Args[1] {
 	case "webserver":
-		webserverCmd.Parse(os.Args[2:])
+		if err := webserverCmd.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error [parsing command line flags")
+			os.Exit(1)
+		}
 		ws := webserver.NewWebServer(webserver.WebServerConfig{
 			Address:      *webserverAddr,
 			SimpleParser: simpleParser,
 			PegParser:    pegParser,
 		})
-		ws.Start()
+		err := ws.Start()
+		if err != nil {
+			fmt.Println("Server Error")
+			os.Exit(1)
+		}
 	case "repl":
-		replCmd.Parse(os.Args[2:])
+		if err := replCmd.Parse(os.Args[2:]); err != nil {
+			fmt.Println("Error [parsing command line flags")
+			os.Exit(1)
+		}
 		var parser parser.Parser
 		if *replParser == "peg" {
 			parser = pegParser
