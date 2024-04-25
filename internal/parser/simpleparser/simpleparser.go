@@ -35,59 +35,8 @@ func (p SimpleParser) ParseInput(input string) (string, error) {
 			continue
 		}
 
-		var (
-			headerLevel int
-			bracketText string
-			urlText     string
-			text        = strings.TrimSpace(line)
-		)
-
-		linkAllSubmatch := p.linkRegex.FindAllStringSubmatch(line, -1)
-		linkSubexpNames := p.linkRegex.SubexpNames()
-
-		for _, linkSubmatch := range linkAllSubmatch {
-			if len(linkSubmatch) > 0 {
-				for i, name := range linkSubexpNames {
-					switch name {
-					case "bracket":
-						bracketText = linkSubmatch[i]
-
-						if bracketText == "" {
-							text = strings.Replace(text, linkSubmatch[0], "", 1)
-						}
-					case "paren":
-						urlText = linkSubmatch[i]
-						if urlText == "" {
-							text = strings.Replace(text, linkSubmatch[0], fmt.Sprintf("<a href=\"\">%s</a>", bracketText), 1)
-						} else {
-							var replacement string
-							urlRemovedSpaces := removeExtraSpaces(urlText)
-							urlTrimmed := strings.TrimSpace(urlText)
-							if urlRemovedSpaces != urlTrimmed {
-								replacement = fmt.Sprintf("[%s](%s)", bracketText, urlText)
-							} else {
-								bracketTextTrimmed := strings.TrimSpace(bracketText)
-								replacement = fmt.Sprintf("<a href=\"%s\">%s</a>", urlTrimmed, bracketTextTrimmed)
-							}
-							text = strings.Replace(text, linkSubmatch[0], replacement, 1)
-						}
-					}
-				}
-			}
-		}
-
-		headingSubmatch := p.headerRegex.FindStringSubmatch(text)
-		headerSubexpNames := p.headerRegex.SubexpNames()
-		if len(headingSubmatch) > 0 {
-			for i, name := range headerSubexpNames {
-				switch name {
-				case "header":
-					headerLevel = len(headingSubmatch[i])
-				case "text":
-					text = strings.TrimSpace(headingSubmatch[i])
-				}
-			}
-		}
+		text := parseLinks(line, p.linkRegex)
+		text, headerLevel := parseHeader(text, p.headerRegex)
 
 		var formattedLine string
 		if text != "" {
@@ -116,4 +65,68 @@ func isPoundString(s string) bool {
 		}
 	}
 	return true
+}
+
+func parseLinks(line string, linkRegex *regexp.Regexp) string {
+	var (
+		bracketText string
+		urlText     string
+		text        = strings.TrimSpace(line)
+	)
+
+	linkAllSubmatch := linkRegex.FindAllStringSubmatch(line, -1)
+	linkSubexpNames := linkRegex.SubexpNames()
+
+	for _, linkSubmatch := range linkAllSubmatch {
+		if len(linkSubmatch) > 0 {
+			for i, name := range linkSubexpNames {
+				switch name {
+				case "bracket":
+					bracketText = linkSubmatch[i]
+
+					if bracketText == "" {
+						// remove submatch if there is no text in []
+						text = strings.Replace(text, linkSubmatch[0], "", 1)
+					}
+				case "paren":
+					var replacement string
+					urlText = linkSubmatch[i]
+					if urlText == "" {
+						// replace submatch with a link that doesn't have an href
+						replacement = fmt.Sprintf("<a href=\"\">%s</a>", bracketText)
+					} else {
+						urlRemovedSpaces := removeExtraSpaces(urlText)
+						urlTrimmed := strings.TrimSpace(urlText)
+						if urlRemovedSpaces != urlTrimmed {
+							// if there is whitespace in the link (meaning it's invalid)
+							replacement = fmt.Sprintf("[%s](%s)", bracketText, urlText)
+						} else {
+							// typical replacement
+							bracketTextTrimmed := strings.TrimSpace(bracketText)
+							replacement = fmt.Sprintf("<a href=\"%s\">%s</a>", urlTrimmed, bracketTextTrimmed)
+						}
+					}
+					text = strings.Replace(text, linkSubmatch[0], replacement, 1)
+				}
+			}
+		}
+	}
+	return text
+}
+
+func parseHeader(line string, headerRegex *regexp.Regexp) (string, int) {
+	var headerLevel int
+	headingSubmatch := headerRegex.FindStringSubmatch(line)
+	headerSubexpNames := headerRegex.SubexpNames()
+	if len(headingSubmatch) > 0 {
+		for i, name := range headerSubexpNames {
+			switch name {
+			case "header":
+				headerLevel = len(headingSubmatch[i])
+			case "text":
+				line = strings.TrimSpace(headingSubmatch[i])
+			}
+		}
+	}
+	return line, headerLevel
 }
